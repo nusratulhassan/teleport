@@ -1012,7 +1012,7 @@ func migrateMFADevices(ctx context.Context, asrv *Server) error {
 		}
 
 		if len(la.TOTPKey) > 0 {
-			d, err := types.NewTOTPDevice("totp", la.TOTPKey)
+			d, err := types.NewTOTPDevice("totp", la.TOTPKey, asrv.clock.Now())
 			if err != nil {
 				return trace.Wrap(err)
 			}
@@ -1032,7 +1032,7 @@ func migrateMFADevices(ctx context.Context, asrv *Server) error {
 			d, err := types.NewU2FDevice("u2f", &u2f.Registration{
 				KeyHandle: la.U2FRegistration.KeyHandle,
 				PubKey:    *pubKey,
-			})
+			}, asrv.clock.Now())
 			if err != nil {
 				return trace.Wrap(err)
 			}

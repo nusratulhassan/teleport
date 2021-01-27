@@ -40,6 +40,7 @@ import (
 	"github.com/gravitational/teleport/lib/defaults"
 	"github.com/gravitational/teleport/lib/services"
 	"github.com/gravitational/teleport/lib/utils"
+	"github.com/jonboulle/clockwork"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
@@ -402,6 +403,7 @@ func (s *AuthInitSuite) TestCASigningAlg(c *C) {
 
 func TestMigrateMFADevices(t *testing.T) {
 	ctx := context.Background()
+	clock := clockwork.NewFakeClock()
 
 	// Set up an auth server with all prerequisites.
 	bk, err := memory.New(memory.Config{Context: ctx})
@@ -432,6 +434,7 @@ func TestMigrateMFADevices(t *testing.T) {
 	as, err := Init(ac)
 	require.NoError(t, err)
 	defer as.Close()
+	as.SetClock(clock)
 
 	// Fake credentials and MFA secrets for migration.
 	fakePasswordHash := []byte(`$2a$10$Yy.e6BmS2SrGbBDsyDLVkOANZmvjjMR890nUGSXFJHBXWzxe7T44m`)
@@ -488,7 +491,7 @@ func TestMigrateMFADevices(t *testing.T) {
 		newUserWithAuth(t, "totp-user", &types.LocalAuthSecrets{
 			PasswordHash: fakePasswordHash,
 			TOTPKey:      totpKey,
-			MFA:          requireNewDevice(types.NewTOTPDevice("totp", totpKey)),
+			MFA:          requireNewDevice(types.NewTOTPDevice("totp", totpKey, clock.Now())),
 		}),
 		newUserWithAuth(t, "u2f-user", &types.LocalAuthSecrets{
 			PasswordHash: fakePasswordHash,
@@ -499,12 +502,12 @@ func TestMigrateMFADevices(t *testing.T) {
 			MFA: requireNewDevice(types.NewU2FDevice("u2f", &u2f.Registration{
 				KeyHandle: u2fKeyHandle,
 				PubKey:    u2fPubKey,
-			})),
+			}, clock.Now())),
 		}),
 	}
 	cmpOpts := []cmp.Option{
 		cmpopts.IgnoreFields(types.UserSpecV2{}, "CreatedBy"),
-		cmpopts.IgnoreFields(types.MFADevice{}, "Id", "AddedAt", "LastUsed"),
+		cmpopts.IgnoreFields(types.MFADevice{}, "Id"),
 		cmpopts.SortSlices(func(a, b types.User) bool { return a.GetName() < b.GetName() }),
 	}
 

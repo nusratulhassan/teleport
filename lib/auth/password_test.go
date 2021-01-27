@@ -208,15 +208,15 @@ func (s *PasswordSuite) TestChangePasswordWithOTP(c *C) {
 	req, err := s.prepareForPasswordChange("user2", []byte("abc123"), teleport.OTP)
 	c.Assert(err, IsNil)
 
+	fakeClock := clockwork.NewFakeClock()
+	s.a.SetClock(fakeClock)
+
 	otpSecret := base32.StdEncoding.EncodeToString([]byte("def456"))
-	dev, err := types.NewTOTPDevice("otp", otpSecret)
+	dev, err := types.NewTOTPDevice("otp", otpSecret, fakeClock.Now())
 	c.Assert(err, check.IsNil)
 	ctx := context.Background()
 	err = s.a.UpsertMFADevice(ctx, req.User, dev)
 	c.Assert(err, check.IsNil)
-
-	fakeClock := clockwork.NewFakeClock()
-	s.a.SetClock(fakeClock)
 
 	validToken, err := totp.GenerateCode(otpSecret, s.a.GetClock().Now())
 	c.Assert(err, IsNil)

@@ -875,7 +875,6 @@ func (a *Server) CheckU2FSignResponse(user string, response *u2f.SignResponse) e
 		return trace.Wrap(err)
 	}
 	// TODO(awly): support multiple U2F device challenges.
-	// TODO(awly): support multiple U2F device challenges.
 	var u2fDev *types.MFADevice
 	for _, dev := range devs {
 		if dev.GetU2F() != nil {
@@ -904,6 +903,7 @@ func (a *Server) CheckU2FSignResponse(user string, response *u2f.SignResponse) e
 	}
 
 	u2fDev.GetU2F().Counter = newCounter
+	u2fDev.LastUsed = a.clock.Now()
 	err = a.UpsertMFADevice(ctx, user, u2fDev)
 	if err != nil {
 		return trace.Wrap(err)

@@ -319,7 +319,7 @@ func (l *LocalAuthSecrets) Check() error {
 // Equals checks equality (nil safe).
 func (l *LocalAuthSecrets) Equals(other *LocalAuthSecrets) bool {
 	if (l == nil) || (other == nil) {
-		return (l == nil) && (other == nil)
+		return l == other
 	}
 	if !bytes.Equal(l.PasswordHash, other.PasswordHash) {
 		return false
@@ -349,15 +349,15 @@ func (l *LocalAuthSecrets) Equals(other *LocalAuthSecrets) bool {
 
 // newMFADevice creates a new MFADevice with the given name. Caller must set
 // the Device field in the returned MFADevice.
-func newMFADevice(name string) *MFADevice {
+func newMFADevice(name string, addedAt time.Time) *MFADevice {
 	return &MFADevice{
 		Kind: KindMFADevice,
 		Metadata: Metadata{
 			Name: name,
 		},
 		Id:       uuid.New(),
-		AddedAt:  time.Now(),
-		LastUsed: time.Now(),
+		AddedAt:  addedAt,
+		LastUsed: addedAt,
 	}
 }
 
@@ -366,7 +366,7 @@ func (d *MFADevice) CheckAndSetDefaults() error {
 		return trace.Wrap(err)
 	}
 	if d.Kind == "" {
-		return trace.BadParameter("MFADevice missing ID field")
+		return trace.BadParameter("MFADevice missing Kind field")
 	}
 	if d.Version == "" {
 		d.Version = V1
@@ -403,7 +403,7 @@ func (d *MFADevice) CheckAndSetDefaults() error {
 
 func (d *MFADevice) Equals(other *MFADevice) bool {
 	if (d == nil) || (other == nil) {
-		return (d == nil) && (other == nil)
+		return d == other
 	}
 	if d.Kind != other.Kind {
 		return false
@@ -456,9 +456,9 @@ func (d *MFADevice) UnmarshalJSON(buf []byte) error {
 	return jsonpb.Unmarshal(bytes.NewReader(buf), d)
 }
 
-// NewU2FDevice creates a TOTP MFADevice from the given key.
-func NewTOTPDevice(name, key string) (*MFADevice, error) {
-	d := newMFADevice(name)
+// NewTOTPDevice creates a TOTP MFADevice from the given key.
+func NewTOTPDevice(name, key string, addedAt time.Time) (*MFADevice, error) {
+	d := newMFADevice(name, addedAt)
 	d.Device = &MFADevice_Totp{Totp: &TOTPDevice{
 		Key: key,
 	}}
@@ -477,15 +477,15 @@ func (d *TOTPDevice) Check() error {
 
 func (d *TOTPDevice) Equals(other *TOTPDevice) bool {
 	if (d == nil) || (other == nil) {
-		return (d == nil) && (other == nil)
+		return d == other
 	}
 	return d.Key == other.Key
 }
 
 // NewU2FDevice creates a U2F MFADevice object from a completed U2F
 // registration.
-func NewU2FDevice(name string, reg *u2f.Registration) (*MFADevice, error) {
-	d := newMFADevice(name)
+func NewU2FDevice(name string, reg *u2f.Registration, addedAt time.Time) (*MFADevice, error) {
+	d := newMFADevice(name, addedAt)
 	pubKey, err := x509.MarshalPKIXPublicKey(&reg.PubKey)
 	if err != nil {
 		return nil, trace.Wrap(err)
@@ -508,7 +508,7 @@ func (d *U2FDevice) Check() error {
 		return trace.BadParameter("U2FDevice missing PubKey field")
 	}
 	if _, err := d.GetPubKeyDecoded(); err != nil {
-		return trace.BadParameter("U2fDevice PubKey is invalid: %v", err)
+		return trace.BadParameter("U2FDevice PubKey is invalid: %v", err)
 	}
 	return nil
 }
@@ -530,7 +530,7 @@ func (d *U2FDevice) GetPubKeyDecoded() (*ecdsa.PublicKey, error) {
 // Equals checks equality (nil safe).
 func (d *U2FDevice) Equals(other *U2FDevice) bool {
 	if (d == nil) || (other == nil) {
-		return (d == nil) && (other == nil)
+		return d == other
 	}
 	if !bytes.Equal(d.KeyHandle, other.KeyHandle) {
 		return false

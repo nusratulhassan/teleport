@@ -780,7 +780,7 @@ func (s *ServicesTestSuite) U2FCRUD(c *check.C) {
 		KeyHandle: []byte("gn49UWxiMRrReCfH6yJBrF2WS75T4nZbnlTk2s3WIYhzQCaH7QfCFtXZb3Qbv1zEhhLZJUgUB2pNMNe89clt4A=="),
 		PubKey:    *pubkey,
 	}
-	dev, err := types.NewU2FDevice("u2f", &registration)
+	dev, err := types.NewU2FDevice("u2f", &registration, s.Clock.Now())
 	c.Assert(err, check.IsNil)
 	ctx := context.Background()
 	err = s.WebS.UpsertMFADevice(ctx, user1, dev)

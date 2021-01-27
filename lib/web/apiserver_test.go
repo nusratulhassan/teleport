@@ -405,7 +405,7 @@ func (s *WebSuite) createUser(c *C, user string, login string, pass string, otpS
 	c.Assert(err, IsNil)
 
 	if otpSecret != "" {
-		dev, err := types.NewTOTPDevice("otp", otpSecret)
+		dev, err := types.NewTOTPDevice("otp", otpSecret, s.clock.Now())
 		c.Assert(err, IsNil)
 		err = s.server.Auth().UpsertMFADevice(context.Background(), user, dev)
 		c.Assert(err, IsNil)
@@ -656,7 +656,7 @@ func (s *WebSuite) TestWebSessionsBadInput(c *C) {
 	err := s.server.Auth().UpsertPassword(user, []byte(pass))
 	c.Assert(err, IsNil)
 
-	dev, err := types.NewTOTPDevice("otp", otpSecret)
+	dev, err := types.NewTOTPDevice("otp", otpSecret, s.clock.Now())
 	c.Assert(err, IsNil)
 	err = s.server.Auth().UpsertMFADevice(context.Background(), user, dev)
 	c.Assert(err, IsNil)

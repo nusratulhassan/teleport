@@ -367,7 +367,7 @@ func (s *Server) changeUserSecondFactor(req ChangePasswordWithTokenRequest, Rese
 			return trace.Wrap(err)
 		}
 
-		dev, err := types.NewTOTPDevice("otp", secrets.GetOTPKey())
+		dev, err := types.NewTOTPDevice("otp", secrets.GetOTPKey(), s.clock.Now())
 		if err != nil {
 			return trace.Wrap(err)
 		}
@@ -400,7 +400,7 @@ func (s *Server) changeUserSecondFactor(req ChangePasswordWithTokenRequest, Rese
 			return trace.BadParameter(err.Error())
 		}
 
-		dev, err := types.NewU2FDevice("u2f", reg)
+		dev, err := types.NewU2FDevice("u2f", reg, s.clock.Now())
 		if err != nil {
 			return trace.Wrap(err)
 		}

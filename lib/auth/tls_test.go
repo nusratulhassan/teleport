@@ -1017,7 +1017,7 @@ func (s *TLSSuite) TestPasswordCRUD(c *check.C) {
 	err = clt.UpsertPassword("user1", pass)
 	c.Assert(err, check.IsNil)
 
-	dev, err := types.NewTOTPDevice("otp", otpSecret)
+	dev, err := types.NewTOTPDevice("otp", otpSecret, s.clock.Now())
 	c.Assert(err, check.IsNil)
 	ctx := context.Background()
 	err = s.server.Auth().UpsertMFADevice(ctx, "user1", dev)
@@ -1366,7 +1366,7 @@ func (s *TLSSuite) TestOTPCRUD(c *check.C) {
 	// upsert a password and totp secret
 	err = clt.UpsertPassword("user1", pass)
 	c.Assert(err, check.IsNil)
-	dev, err := types.NewTOTPDevice("otp", otpSecret)
+	dev, err := types.NewTOTPDevice("otp", otpSecret, s.clock.Now())
 	c.Assert(err, check.IsNil)
 	ctx := context.Background()
 	err = s.server.Auth().UpsertMFADevice(ctx, user, dev)
@@ -2195,7 +2195,7 @@ func (s *TLSSuite) TestAuthenticateWebUserOTP(c *check.C) {
 	err = s.server.Auth().UpsertPassword(user, pass)
 	c.Assert(err, check.IsNil)
 
-	dev, err := types.NewTOTPDevice("otp", otpSecret)
+	dev, err := types.NewTOTPDevice("otp", otpSecret, s.clock.Now())
 	c.Assert(err, check.IsNil)
 	ctx := context.Background()
 	err = s.server.Auth().UpsertMFADevice(ctx, user, dev)
